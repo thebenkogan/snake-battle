@@ -40,7 +40,7 @@ type PlayerState = {
 };
 
 export class Game {
-  static readonly HEIGHT = 100;
+  static readonly HEIGHT = 30;
   static readonly WIDTH = 100;
   static readonly STARTING_LENGTH = 5;
 
@@ -48,7 +48,7 @@ export class Game {
     return p.x >= 0 && p.x < Game.WIDTH && p.y >= 0 && p.y < Game.HEIGHT;
   }
 
-  private board: (PlayerColor | null)[][];
+  board: (PlayerColor | null)[][];
   private red: PlayerState;
   private blue: PlayerState;
 
@@ -87,12 +87,15 @@ export class Game {
     return color === "red" ? this.red : this.blue;
   }
 
-  makeMove(color: PlayerColor, move: Direction): PlayerColor | null {
+  setDirection(color: PlayerColor, direction: Direction) {
     const player = this.player(color);
-
-    if (isOppositeDirection(player.direction, move)) {
-      return oppositeColor(color);
+    if (!isOppositeDirection(player.direction, direction)) {
+      player.direction = direction;
     }
+  }
+
+  private stepPlayer(color: PlayerColor): PlayerColor | null {
+    const player = this.player(color);
 
     if (player.numToGrow > 0) {
       player.numToGrow--;
@@ -101,7 +104,7 @@ export class Game {
       this.set(tail, null);
     }
 
-    const newHead = moveDirection(player.body[0]!, move);
+    const newHead = moveDirection(player.body[0]!, player.direction);
 
     if (!Game.inBounds(newHead) || this.get(newHead)) {
       return oppositeColor(color);
@@ -111,5 +114,13 @@ export class Game {
     this.set(newHead, color);
 
     return null;
+  }
+
+  step(): PlayerColor | null {
+    const redResult = this.stepPlayer("red");
+    if (redResult) {
+      return redResult;
+    }
+    return this.stepPlayer("blue");
   }
 }

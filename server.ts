@@ -22,15 +22,13 @@ class GameManager {
   private waitingPool: PlayerInfo[] = [];
 
   private tickGames() {
+    console.time("TICK");
     for (const [id, state] of Object.entries(this.activeGames)) {
       const { game, queuedMoves } = state;
-      let winner = null;
       for (const [color, move] of queuedMoves) {
-        winner = game.makeMove(color, move);
-        if (winner) {
-          break;
-        }
+        game.setDirection(color, move);
       }
+      const winner = game.step();
 
       if (winner) {
         delete this.activeGames[id];
@@ -40,6 +38,7 @@ class GameManager {
         queuedMoves.splice(0, queuedMoves.length);
       }
     }
+    console.timeEnd("TICK");
   }
 
   constructor() {
