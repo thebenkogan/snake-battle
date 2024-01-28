@@ -1,11 +1,15 @@
 export type PlayerColor = "red" | "blue";
 
+export function oppositeColor(color: PlayerColor): PlayerColor {
+  return color === "red" ? "blue" : "red";
+}
+
 type Point = {
   x: number;
   y: number;
 };
 
-type Direction = "up" | "down" | "left" | "right";
+export type Direction = "up" | "down" | "left" | "right";
 
 function isOppositeDirection(d1: Direction, d2: Direction): boolean {
   return (
@@ -83,11 +87,11 @@ export class Game {
     return color === "red" ? this.red : this.blue;
   }
 
-  makeMove(color: PlayerColor, move: Direction): boolean {
+  makeMove(color: PlayerColor, move: Direction): PlayerColor | null {
     const player = this.player(color);
 
     if (isOppositeDirection(player.direction, move)) {
-      return false;
+      return oppositeColor(color);
     }
 
     if (player.numToGrow > 0) {
@@ -100,12 +104,12 @@ export class Game {
     const newHead = moveDirection(player.body[0]!, move);
 
     if (!Game.inBounds(newHead) || this.get(newHead)) {
-      return false;
+      return oppositeColor(color);
     }
 
     player.body.unshift(newHead);
     this.set(newHead, color);
 
-    return true;
+    return null;
   }
 }
