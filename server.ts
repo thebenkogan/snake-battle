@@ -1,41 +1,44 @@
 import type { Server } from "bun";
 import { PORT } from "./config";
 import { randomUUID } from "crypto";
+import { Game, type PlayerColor } from "./snake";
+
+type PlayerInfo = {
+  gameId: string;
+  color: PlayerColor;
+};
 
 class GameManager {
   private activeGames: Record<string, Date> = {};
-  private waitingPool: string[] = [];
+  private waitingPool: PlayerInfo[] = [];
 
-  assignGameId() {
-    let gameId: string;
+  assignGame(): PlayerInfo {
     if (this.waitingPool.length > 0) {
-      gameId = this.waitingPool.pop()!;
-      this.activeGames[gameId] = new Date();
+      const waitingPlayer = this.waitingPool.pop()!;
+      this.activeGames[waitingPlayer.gameId] = new Date();
+      return {
+        gameId: waitingPlayer.gameId,
+        color: waitingPlayer.color === "red" ? "blue" : "red",
+      };
     } else {
-      gameId = randomUUID();
-      this.waitingPool.push(gameId);
+      const info: PlayerInfo = { gameId: randomUUID(), color: "red" };
+      this.waitingPool.push(info);
+      return info;
     }
-    return gameId;
   }
 
-  isGameReady(gameId: string): boolean {
+  isGameActive(gameId: string): boolean {
     return gameId in this.activeGames;
   }
 }
 
-type WebSocketData = {
-  gameId: string;
-};
-
 const gameManager = new GameManager();
 
 let server: Server;
-server = Bun.serve<WebSocketData>({
+server = Bun.serve<PlayerInfo>({
   fetch(req, server) {
-    const gameId = gameManager.assignGameId();
-    const success = server.upgrade(req, {
-      data: { gameId },
-    });
+    const data = gameManager.assignGame();
+    const success = server.upgrade<PlayerInfo>(req, { data });
     if (!success) {
       new Response("Upgrade failed", { status: 500 });
     }
@@ -45,7 +48,7 @@ server = Bun.serve<WebSocketData>({
       const id = ws.data.gameId;
       console.log("OPENED:", id);
       ws.subscribe(id);
-      if (gameManager.isGameReady(id)) {
+      if (gameManager.isGameActive(id)) {
         server.publish(id, "Game is ready");
       }
     },
