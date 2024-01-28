@@ -41,7 +41,7 @@ type PlayerState = {
 
 export class Game {
   static readonly HEIGHT = 30;
-  static readonly WIDTH = 100;
+  static readonly WIDTH = 70;
   static readonly STARTING_LENGTH = 5;
 
   static inBounds(p: Point): boolean {

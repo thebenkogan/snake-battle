@@ -70,6 +70,24 @@ class GameManager {
     }
     queuedMoves.push([info.color, move]);
   }
+
+  closeGame(info: PlayerInfo) {
+    if (info.gameId in this.activeGames) {
+      delete this.activeGames[info.gameId];
+      this.waitingPool.push({
+        gameId: info.gameId,
+        color: oppositeColor(info.color),
+      });
+      server.publish(
+        info.gameId,
+        JSON.stringify({ winner: oppositeColor(info.color) })
+      );
+    } else {
+      this.waitingPool = this.waitingPool.filter(
+        (i) => i.gameId !== info.gameId
+      );
+    }
+  }
 }
 
 const gameManager = new GameManager();
@@ -92,6 +110,10 @@ server = Bun.serve<PlayerInfo>({
         `RECEIVED MOVE ${message} from ${ws.data.color} in ${ws.data.gameId}`
       );
       gameManager.receiveMove(ws.data, message as Direction);
+    },
+    close(ws) {
+      gameManager.closeGame(ws.data);
+      console.log("CLOSED:", ws.data.gameId);
     },
   },
   port: PORT,
