@@ -10,7 +10,6 @@ socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data.toString());
 
   if ("winner" in data) {
-    console.log("winner", data.winner);
     socket.close();
     location.reload();
   }
@@ -19,7 +18,6 @@ socket.addEventListener("message", (event) => {
 
   setGame(game);
 
-  console.log(lastMove);
   if (lastMove !== null) {
     socket.send(lastMove);
   }
