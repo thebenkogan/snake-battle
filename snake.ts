@@ -39,25 +39,39 @@ type PlayerState = {
   numToGrow: number;
 };
 
+type Cell = PlayerColor | "food" | null;
+export type Board = Cell[][];
+
 export class Game {
   static readonly HEIGHT = 30;
   static readonly WIDTH = 70;
-  static readonly STARTING_LENGTH = 5;
+  static readonly FOOD_LENGTH = 5;
+  static readonly NUM_FOOD = 10;
 
   static inBounds(p: Point): boolean {
     return p.x >= 0 && p.x < Game.WIDTH && p.y >= 0 && p.y < Game.HEIGHT;
   }
 
-  board: (PlayerColor | null)[][];
+  board: Board;
   private red: PlayerState;
   private blue: PlayerState;
 
-  private get(p: Point): PlayerColor | null {
+  private get(p: Point): Cell {
     return this.board[p.y]![p.x]!;
   }
 
-  private set(p: Point, v: PlayerColor | null) {
+  private set(p: Point, v: Cell) {
     this.board[p.y]![p.x] = v;
+  }
+
+  private addRandomFood() {
+    const x = Math.floor(Math.random() * Game.WIDTH);
+    const y = Math.floor(Math.random() * Game.HEIGHT);
+    if (this.get({ x, y })) {
+      this.addRandomFood();
+    } else {
+      this.set({ x, y }, "food");
+    }
   }
 
   constructor() {
@@ -70,17 +84,21 @@ export class Game {
     this.red = {
       body: [{ x: xOffset, y: startY }],
       direction: "right",
-      numToGrow: Game.STARTING_LENGTH,
+      numToGrow: Game.FOOD_LENGTH - 1,
     };
 
     this.blue = {
       body: [{ x: Game.WIDTH - xOffset, y: startY }],
       direction: "left",
-      numToGrow: Game.STARTING_LENGTH,
+      numToGrow: Game.FOOD_LENGTH - 1,
     };
 
     this.set(this.red.body[0]!, "red");
     this.set(this.blue.body[0]!, "blue");
+
+    for (let i = 0; i < Game.NUM_FOOD; i++) {
+      this.addRandomFood();
+    }
   }
 
   private player(color: PlayerColor): PlayerState {
@@ -105,9 +123,15 @@ export class Game {
     }
 
     const newHead = moveDirection(player.body[0]!, player.direction);
+    const atNewHead = this.get(newHead);
 
-    if (!Game.inBounds(newHead) || this.get(newHead)) {
+    if (!Game.inBounds(newHead) || (atNewHead && atNewHead !== "food")) {
       return oppositeColor(color);
+    }
+
+    if (atNewHead === "food") {
+      player.numToGrow += Game.FOOD_LENGTH - 1;
+      this.addRandomFood();
     }
 
     player.body.unshift(newHead);

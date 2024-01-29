@@ -20,6 +20,7 @@ socket.addEventListener("message", (event) => {
 
   if (lastMove !== null) {
     socket.send(lastMove);
+    lastMove = null;
   }
 });
 
@@ -63,7 +64,7 @@ function Board() {
           <div
             class="aspect-square border-black border-2 max-h-fit"
             style={{
-              "background-color": cell ?? "gray",
+              "background-color": cell === "food" ? "green" : cell ?? "gray",
             }}
           ></div>
         )}
