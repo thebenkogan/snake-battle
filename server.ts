@@ -2,6 +2,7 @@ import type { Server } from "bun";
 import { PORT } from "./config";
 import { randomUUID } from "crypto";
 import { Game, type Direction, type PlayerColor, oppositeColor } from "./snake";
+import serveStatic from "serve-static-bun";
 
 type PlayerInfo = {
   gameId: string;
@@ -91,14 +92,19 @@ class GameManager {
 }
 
 const gameManager = new GameManager();
+const staticServer = serveStatic("client/dist");
 
 server = Bun.serve<PlayerInfo>({
   fetch(req, server) {
-    const data = gameManager.assignGame();
-    const success = server.upgrade<PlayerInfo>(req, { data });
-    if (!success) {
-      new Response("Upgrade failed", { status: 500 });
+    const url = new URL(req.url);
+    if (url.pathname === "/game") {
+      const data = gameManager.assignGame();
+      const success = server.upgrade<PlayerInfo>(req, { data });
+      if (!success) {
+        new Response("Upgrade failed", { status: 500 });
+      }
     }
+    return staticServer(req);
   },
   websocket: {
     open(ws) {

@@ -4,7 +4,7 @@ import { PORT } from "../../config";
 
 const [game, setGame] = createSignal(new Game());
 
-const socket = new WebSocket(`ws://localhost:${PORT}`);
+const socket = new WebSocket(`ws://localhost:${PORT}/game`);
 
 socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data.toString());

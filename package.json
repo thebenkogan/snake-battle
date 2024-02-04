@@ -2,11 +2,17 @@
   "name": "snake-battle",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start": "bun --cwd client build && bun run server.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "prettier": "3.2.4"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "serve-static-bun": "^0.5.3"
   }
 }
