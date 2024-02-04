@@ -123,9 +123,12 @@ export class Game {
     }
 
     const newHead = moveDirection(player.body[0]!, player.direction);
-    const atNewHead = this.get(newHead);
+    if (!Game.inBounds(newHead)) {
+      return oppositeColor(color);
+    }
 
-    if (!Game.inBounds(newHead) || (atNewHead && atNewHead !== "food")) {
+    const atNewHead = this.get(newHead);
+    if (atNewHead && atNewHead !== "food") {
       return oppositeColor(color);
     }
 
